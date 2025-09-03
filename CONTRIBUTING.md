@@ -5,16 +5,12 @@ Contributions from the community are what make open-source tools like this thriv
 
 This document provides guidelines for contributing code, documentation, or ideas.
 
----
-
 ## 📌 Ways to contribute
 
 - **Report bugs** by opening [GitHub issues](https://github.com/khan-lab/ENCODEfetch/issues).
 - **Suggest features** or improvements through an issue or a discussion.
 - **Improve documentation** (README, docs/, examples, API references).
 - **Submit code** via pull requests (PRs).
-
----
 
 ## 🛠️ Development setup
 
@@ -44,8 +40,6 @@ This document provides guidelines for contributing code, documentation, or ideas
    pip install -r docs/requirements.txt
    ```
 
----
-
 ## 🧪 Testing
 
 We use **pytest** for testing.
@@ -59,8 +53,6 @@ Before submitting a PR, ensure:
 - All tests pass (`pytest`).
 - Code coverage is not reduced.
 - New features have corresponding tests.
-
----
 
 ## 🎨 Code style
 
@@ -78,8 +70,6 @@ Before submitting a PR, ensure:
   flake8 encodefetch tests
   ```
 
----
-
 ## 📚 Documentation
 
 - Documentation lives in [`docs/`](docs/).
@@ -90,8 +80,6 @@ Before submitting a PR, ensure:
   make html
   open _build/html/index.html
   ```
-
----
 
 ## 🔀 Pull requests
 
@@ -115,8 +103,6 @@ Before submitting a PR, ensure:
 
 4. In your PR description, reference related issues (e.g., `Fixes #42`).
 
----
-
 ## ✅ PR checklist
 
 - [ ] Tests added/updated and all passing
@@ -125,20 +111,12 @@ Before submitting a PR, ensure:
 - [ ] PR description clearly explains changes
 - [ ] Linked to relevant issue(s)
 
----
-
 ## 🤝 Code of conduct
 
 Please note that this project follows the [Contributor Covenant](https://www.contributor-covenant.org/).  
 By participating, you agree to uphold our community standards of respect, inclusivity, and collaboration.
 
----
-
 ## 📧 Questions?
 
 - GitHub Issues: <https://github.com/khan-lab/ENCODEfetch/issues>
-- Maintainer: [Aziz Khan](https://github.com/aziz-khan)
-
----
-
-💡 Tip: even small improvements (fixing typos, adding examples, clarifying docs) are valuable contributions!
+- Maintainer: [Aziz Khan](https://github.com/asntech)
