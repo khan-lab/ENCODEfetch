@@ -1,0 +1,42 @@
+name: docs
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "docs/**"
+      - "encodefetch/**"
+      - "pyproject.toml"
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          pip install -e .
+
+      - name: Install docs deps
+        run: |
+          pip install -r docs/requirements.txt
+
+      - name: Build HTML
+        working-directory: docs
+        run: make html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
+          publish_branch: gh-pages
+          force_orphan: true

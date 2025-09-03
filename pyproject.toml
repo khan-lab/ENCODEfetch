@@ -1,0 +1,23 @@
+[project]
+name = "encodefetch"
+version = "1.0.1"
+description = "ENCODEfetch: a command-line tool for retrieving matched case-control data and standardized metadata from ENCODE"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{ name="Aziz Khan", email="aziz.khan@mbzuai.ac.ae" }]
+
+dependencies = [
+  "requests>=2.31",
+  "pandas>=1.5",
+  "rich>=13.7",
+  "rich-click>=1.7",
+  "click>=8.1"
+]
+
+[project.scripts]
+encode-fetch = "encodefetch.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
