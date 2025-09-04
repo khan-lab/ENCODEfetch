@@ -1,4 +1,4 @@
-# <img src="logo.png" align="right" width="180"/>
+# ENCODEfetch <img src="logo.png" align="right" width="190"/>
 
 [![PyPI](https://img.shields.io/pypi/v/encodefetch.svg?style=flat-square)](https://pypi.org/project/encodefetch/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
