@@ -1,4 +1,4 @@
-# ENCODEfetch <img src="logo.png" align="right" width="180"/>
+# <img src="logo.png" align="right" width="180"/>
 
 [![PyPI](https://img.shields.io/pypi/v/encodefetch.svg?style=flat-square)](https://pypi.org/project/encodefetch/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -120,6 +120,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## 📜 License
 
-MIT License © 2025 [Aziz Khan](https://github.com/aziz-khan)
+MIT License © 2025 [Aziz Khan](https://github.com/asntech)
 
 ---
