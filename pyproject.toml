@@ -41,7 +41,7 @@ Source = "https://github.com/khan-lab/ENCODEfetch"
 Issues = "https://github.com/khan-lab/ENCODEfetch/issues"
 
 [project.scripts]
-"encode-fetch" = "encodefetch.cli:main"
+ENCODEfetch = "encodefetch.cli:main"
 encodefetch = "encodefetch.cli:main"
 
 [project.optional-dependencies]

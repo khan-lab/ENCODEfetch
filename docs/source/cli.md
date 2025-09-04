@@ -1,13 +1,15 @@
 # Command-line Interface
 
 Basic example:
+
 ```bash
-encode-fetch --assay-title "TF ChIP-seq"              --target-label BRD4,SMAD3              --organism "Homo sapiens"              --file-type fastq              --status released              --progress              --download              --threads 8              --nfcore
+encodefetch --assay-title "TF ChIP-seq"              --target-label BRD4,SMAD3              --organism "Homo sapiens"              --file-type fastq              --status released              --progress              --download              --threads 8              --nfcore
 ```
 
-Run `encode-fetch --help` to see all options.
+Run `encodefetch --help` to see all options.
 
 ## Key options
+
 - `--accessions ENCSR123ABC,ENCSR456DEF` — fetch experiments by accession directly.
 - `--assay-title` — e.g. `TF ChIP-seq`, `Histone ChIP-seq`, `ATAC-seq`, `RNA-seq`.
 - `--target-label` — one or more targets (comma-separated).
