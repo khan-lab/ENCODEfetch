@@ -2,7 +2,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/encodefetch.svg?style=flat-square)](https://pypi.org/project/encodefetch/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/khan-lab/ENCODEfetch/actions/workflows/ci.yml/badge.svg)](https://github.com/khan-lab/ENCODEfetch/actions)
 
 **ENCODEfetch** is a command-line tool and Python package for retrieving matched case–control datasets and standardized metadata from the [ENCODE Project](https://www.encodeproject.org).
 
@@ -79,23 +78,24 @@ After a run, `outdir/` contains:
 import encodefetch as ef
 
 # Search experiments
-df, recs = ef.search_experiments(
+metadata, recs = ef.search_experiments(
     assay_title="TF ChIP-seq",
     target_labels=["BRD4","SMAD3"],
     organism="Homo sapiens",
     file_types={"fastq"},
     status="released",
-    progress=True,
-    threads=8,
+    progress=False,
+    threads=2,
 )
 
-print(df.head())
+metadata.head()
 
 # Collapse paired-end FASTQs to one row
-df = ef.collapse_fastq_pairs(df)
+metadata_collapse = ef.collapse_fastq_pairs(metadata)
 
 # Write nf-core samplesheet
-ef.write_samplesheet(df, "nfcore_chipseq", "nfcore_chipseq.csv")
+ef.write_nfcore_sheet(metadata_collapse, "nfcore_chipseq.csv")
+
 ```
 
 ## 🧬 Assay support
@@ -117,9 +117,3 @@ Contributions are welcome!
 - Extend metadata fields in `build_file_record`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-## 📜 License
-
-MIT License © 2025 [Aziz Khan](https://github.com/asntech)
-
----
