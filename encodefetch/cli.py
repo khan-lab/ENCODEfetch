@@ -14,26 +14,77 @@ from .core import (
     write_snakemake_sheet,
 )
 
+from . import __version__
+
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 
-@click.command(help="ENCODEfetch: a command-line tool for retrieving matched case-control data and standardized metadata from ENCODE.\n\n"
+
+click.rich_click.OPTION_GROUPS = {
+    "encodefetch": [
+        {
+            "name": "Direct selection",
+            "options": ["--accessions",],
+        },
+        {
+            "name": "Search filters",
+            "options": [
+                "--assay-title", "--target-label", "--organism",
+                "--perturbed", "--status"
+            ],
+        },
+        {
+            "name": "File selection and download",
+            "options": ["--file-type", "--assembly", "--download"],
+        },
+        {
+            "name": "Output & reports",
+            "options": ["--outdir", "--nfcore", "--snakemake"],
+        },
+        {
+            "name": "Performance & UX",
+            "options": ["--threads", "--max-retries", "--chunk-size", "--progress"],
+        },
+        {
+            "name": "Execution",
+            "options": ["--dry-run", "--auth-token", "--version", "--help"],
+        },
+    ]
+}
+
+
+@click.command(name="encodefetch", help="ENCODEfetch: a command-line tool for retrieving matched case-control data and standardized metadata from ENCODE.\n\n"
                     "Author: Aziz Khan <aziz.khan@mbzuai.ac.ae>\n"
                     "https://github.com/khan-lab/ENCODEfetch")
 
-@click.option("--accessions", default=None, help="Comma-separated experiment accessions.")
-@click.option("--assay-title", default="Histone ChIP-seq", show_default=True, help="Assay title.")
-@click.option("--target-label", multiple=True, help="Target label(s); repeat or comma-separate.")
-@click.option("--organism", default=None, help="Organism scientific name.")
+@click.option("--accessions", default=None, 
+              help="Comma-separated experiment accessions.")
+
+@click.option("--assay-title", default="Histone ChIP-seq", 
+              show_default=True, help="Assay title.")
+
+@click.option("--target-label", multiple=True, 
+              help="Target label(s); repeat or comma-separate.")
+
+@click.option("--organism", default=None, 
+              help="Organism scientific name.")
+
 @click.option("--file-type", "file_type", multiple=True,
               type=click.Choice(["fastq","bam","bed","bigWig","tsv","bw","bedpe"], case_sensitive=False),
               help="File formats to include.")
-@click.option("--assembly", default=None, help="Assembly filter.")
-@click.option("--status", default="released", show_default=True, help="File status filter.")
+
+@click.option("--assembly", default=None, 
+              help="Assembly filter.")
+
+@click.option("--status", default="released", show_default=True, 
+              help="File status filter.")
+
 @click.option("--perturbed", type=click.Choice(["true","false"], case_sensitive=False),
               default=None, help="Filter experiments by 'perturbed'.")
+
 @click.option("--outdir", default="encode_results", show_default=True, 
               help="Output directory.")
+
 @click.option("--download", is_flag=True, default=False, 
               help="Download files.")
 
@@ -42,19 +93,26 @@ click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 
 @click.option("--max-retries", default=3, show_default=True, type=int,
               help="Max HTTP retries per file during download.")
+
 @click.option("--chunk-size", default=1024*1024, show_default=True, type=int,
               help="Download chunk size in bytes (e.g., 1048576 for 1 MiB).")
 
 @click.option("--dry-run", is_flag=True, default=False, 
               help="Only write manifest/metadata; skip downloads.")
+
 @click.option("--auth-token", default=None, 
               help="ENCODE API token.")
+
 @click.option("--progress/--no-progress", default=True, 
               help="Show progress bars.")
+
 @click.option("--nfcore", is_flag=True, default=False, 
               help="Write nf-core chipseq samplesheet.")
+
 @click.option("--snakemake", is_flag=True, default=False, 
               help="Write Snakemake samplesheet.")
+
+@click.version_option(version=__version__, prog_name="ENCODEfetch")
 
 # The main function
 def main(accessions, 

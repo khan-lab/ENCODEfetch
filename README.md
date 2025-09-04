@@ -32,7 +32,7 @@ cd ENCODEfetch
 pip install -e .
 ```
 
-Requires **Python 3.9+**.
+Requires **Python 3.9+**. or newer versions.
 
 ## 🔧 Command-line usage
 
