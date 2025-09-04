@@ -7,13 +7,13 @@
 
 ENCODEfetch automates:
 
-- **Search** for ENCODE experiments by assay, target, organism, status, and more.
-- **Expansion of matched controls** using `possible_controls`.
-- **File retrieval** (FASTQ, BAM, BED, bigWig, etc.) with filtering by status/assembly.
-- **Parallel downloads** with resumable transfers and Rich progress bars.
+- **Search** for ENCODE experiments by assay, target, organism, status, and more
+- **Get case-control matched experiments**
+- **File retrieval** (FASTQ, BAM, BED, bigWig, etc.) with filtering by status/assembly
+- **Parallel downloads** files with resumable transfers and interactive progress bars.
 - **Standardized metadata outputs** (`manifest.tsv`, `metadata.jsonl`).
-- **Plug-and-play samplesheets** for [nf-core](https://nf-co.re/) and Snakemake workflows.
-- **Interactive API** returning tidy `pandas.DataFrame` objects for downstream analysis.
+- **Plug-and-play samplesheets** for [nf-core](https://nf-co.re/) and Snakemake workflows for reproduciable analysis.
+- **Interactive API** returning tidy `pandas.DataFrame` objects of metadata with file paths for downstream analysis.
 
 ## 🚀 Installation
 
@@ -100,11 +100,12 @@ ef.write_nfcore_sheet(metadata_collapse, "nfcore_chipseq.csv")
 
 ## 🧬 Assay support
 
-ENCODEfetch currently provides assay-aware normalization and exporters for:
+ENCODEfetch currently provides assay-aware normalization and exporters to nf-core/snakemake samplesheets for:
 
-- **ChIP-seq** (default)
-- **ATAC-seq** (placeholder, ready for rules)
-- **RNA-seq** (placeholder, ready for rules)
+- **ChIP-seq** (production)
+- **ATAC-seq** (in development)
+- **RNA-seq** (in development)
+- more to be added ..
 
 Each assay can plug in its own normalization (e.g., FASTQ collapsing, strandedness detection) and samplesheet exporters.
 
