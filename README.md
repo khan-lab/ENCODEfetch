@@ -1,4 +1,4 @@
-# ENCODEfetch <img src="logo.png" align="right" width="190"/>
+# ENCODEfetch <img src="docs/img/logo.png" align="right" width="190"/>
 
 [![PyPI](https://img.shields.io/pypi/v/encodefetch.svg?style=flat-square)](https://pypi.org/project/encodefetch/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -14,6 +14,8 @@ ENCODEfetch automates:
 - **Standardized metadata outputs** (`manifest.tsv`, `metadata.jsonl`).
 - **Plug-and-play samplesheets** for [nf-core](https://nf-co.re/) and Snakemake workflows for reproduciable analysis.
 - **Interactive API** returning tidy `pandas.DataFrame` objects of metadata with file paths for downstream analysis.
+
+![cli](/docs/img/ENCODEfetch-cli.png)
 
 ## 🚀 Installation
 
