@@ -8,7 +8,7 @@
 ENCODEfetch automates:
 
 - **Search** for ENCODE experiments by assay, target, organism, status, and more
-- **Get case-control matched experiments**
+- **Get case-control matched** experiments
 - **File retrieval** (FASTQ, BAM, BED, bigWig, etc.) with filtering by status/assembly
 - **Parallel downloads** files with resumable transfers and interactive progress bars.
 - **Standardized metadata outputs** (`manifest.tsv`, `metadata.jsonl`).

@@ -89,12 +89,12 @@ click.rich_click.OPTION_GROUPS = {
               help="Download files.")
 
 @click.option("--threads", default=6, show_default=True, 
-              help="Workers for downloads.")
+              help="Workers for downloads (max 10). ENCODE has a rate limit of 10 requests per second.")
 
 @click.option("--max-retries", default=3, show_default=True, type=int,
               help="Max HTTP retries per file during download.")
 
-@click.option("--chunk-size", default=1024*1024, show_default=True, type=int,
+@click.option("--chunk-size", default=5*1024*1024, show_default=True, type=int,
               help="Download chunk size in bytes (e.g., 1048576 for 1 MiB).")
 
 @click.option("--dry-run", is_flag=True, default=False, 
@@ -177,6 +177,8 @@ def main(accessions,
             exp = row.experiment_accession
             acc = row.file_accession
             fmt = (row.file_format or "dat").lower()
+            if fmt == "fastq":
+                fmt = "fastq.gz"
             return files_dir / typ / exp / f"{acc}.{fmt}"
 
         # Build tasks from dataframe (skip if already present)
@@ -234,6 +236,8 @@ def main(accessions,
             exp = row["experiment_accession"]
             acc = row["file_accession"]
             fmt = (row["file_format"] or "dat").lower()
+            if fmt == "fastq":
+                fmt = "fastq.gz"
             path = files_dir / typ / exp / f"{acc}.{fmt}"
             local_paths.append(str(path) if path.exists() else "")
         df["local_path"] = local_paths

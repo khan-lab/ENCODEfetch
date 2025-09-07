@@ -162,7 +162,7 @@ def experiments_to_df(experiments: Iterable[dict],
     def process_experiment(exp) -> List[dict]:
         local_rows: List[dict] = []
         exp_acc = exp.get("accession")
-        print(f"📦 Processing experiment: {exp_acc}")
+        print(f"📦 Fetching experiment: {exp_acc}")
         exp_full = fetch_experiment(exp_acc, auth=auth, embedded=True)
         ctrl_list = expand_possible_controls(exp_full)
         ctrls_csv = ",".join(ctrl_list)
@@ -187,9 +187,9 @@ def experiments_to_df(experiments: Iterable[dict],
             SpinnerColumn(),
             TextColumn("[bold cyan]{task.description}"),
             BarColumn(),
-            MofNCompleteColumn(),                      # e.g. 3/17
+            MofNCompleteColumn(),
             TextColumn("•"),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),  # 0–100%
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
             TextColumn("•"),
             TimeElapsedColumn(),
             TimeRemainingColumn(),
@@ -233,7 +233,7 @@ def search_experiments(assay_title: Optional[str] = None,
     )
     res = encode_get("/search/", params=params_list, auth=auth, raw_query="control_type!=*")
     experiments = res.get("@graph", [])
-    print(f"🔢 Found {len(experiments)} experiment(s) to process.\n")
+    print(f"🔢 Found {len(experiments)} experiment(s) to fetch.\n")
     return experiments_to_df(experiments, file_types=file_types, assembly=assembly, status=status,
                              auth_token=auth_token, progress=progress, threads=threads)
 
@@ -260,7 +260,7 @@ def download_file(
     auth=None,
     chunk: int = 1024 * 1024,
     retries: int = 3,
-    sleep: int = 2,
+    sleep: int = 1,
 ) -> bool:
     import requests, time
     # ensure dir

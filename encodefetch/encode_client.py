@@ -7,7 +7,7 @@ HEADERS = {"accept": "application/json"}
 def encode_get(path_or_url: str,
                params: Optional[list | dict] = None,
                auth=None,
-               timeout: int = 80,
+               timeout: int = 120,
                raw_query: Optional[str] = None) -> Dict[str, Any] | None:
     url = path_or_url if path_or_url.startswith("http") else (
         ENCODE_BASE.rstrip("/") + "/" + path_or_url.lstrip("/")
