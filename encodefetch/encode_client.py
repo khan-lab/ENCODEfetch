@@ -42,6 +42,7 @@ def build_params(
     assay_title: Optional[str] = None,
     target_labels: Optional[list[str]] = None,
     organism: Optional[str] = None,
+    biosample: Optional[str] = None,
     status: str = "released",
     limit: str = "all",
     extra_params: Optional[dict] = None,
@@ -55,6 +56,8 @@ def build_params(
         p.append(("status", status))
     if organism:
         p.append(("replicates.library.biosample.donor.organism.scientific_name", organism))
+    if biosample:
+        p.append(("biosample_ontology.term_name", biosample))
     if perturbed is not None:
         p.append(("perturbed", perturbed.lower()))
     if target_labels:

@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import concurrent.futures as cf
 
+from os.path import isfile
 import rich_click as click
 from rich.progress import Progress
 
@@ -29,7 +30,7 @@ click.rich_click.OPTION_GROUPS = {
         {
             "name": "Search filters",
             "options": [
-                "--assay-title", "--target-label", "--organism",
+                "--assay-title", "--target-label", "--organism", "--biosample",
                 "--perturbed", "--status"
             ],
         },
@@ -58,7 +59,7 @@ click.rich_click.OPTION_GROUPS = {
                     "https://github.com/khan-lab/ENCODEfetch")
 
 @click.option("--accessions", default=None, 
-              help="Comma-separated experiment accessions.")
+              help="Comma-separated experiment accessions. Or path to text file with one accession per line.")
 
 @click.option("--assay-title", default="Histone ChIP-seq", 
               show_default=True, help="Assay title.")
@@ -68,6 +69,10 @@ click.rich_click.OPTION_GROUPS = {
 
 @click.option("--organism", default=None, 
               help="Organism scientific name.")
+
+@click.option("--biosample", default=None, 
+              help="Biosample ontology term name.")
+
 
 @click.option("--file-type", "file_type", multiple=True,
               type=click.Choice(["fastq","bam","bed","bigWig","tsv","bw","bedpe"], case_sensitive=False),
@@ -118,7 +123,8 @@ click.rich_click.OPTION_GROUPS = {
 def main(accessions, 
          assay_title, 
          target_label, 
-         organism, 
+         organism,
+         biosample, 
          file_type, 
          assembly, 
          status,
@@ -138,14 +144,32 @@ def main(accessions,
     file_types = set([ft.lower() for ft in file_type]) if file_type else None
     outdir = Path(outdir); outdir.mkdir(parents=True, exist_ok=True)
 
+    
     if accessions:
-        acc_list = [a.strip() for a in accessions.split(",") if a.strip()]
-        df, records = search_accessions(acc_list, file_types=file_types, assembly=assembly, status=status,
-                                       auth_token=auth_token, progress=progress)
+        # If accessions is a path to a text file, read from file
+        if isfile(accessions):
+            with open(accessions, "r") as fh:
+                acc_list = [line.strip() for line in fh if line.strip()]
+            click.echo(f"📂 Loaded {len(acc_list)} accessions from file: {accessions}")
+        else:
+            # Otherwise, treat as comma-separated list
+            acc_list = [a.strip() for a in accessions.split(",") if a.strip()]
+            click.echo(f"🧩 Parsed {len(acc_list)} accession(s) from input string.")
+
+        df, records = search_accessions(
+            acc_list,
+            file_types=file_types,
+            assembly=assembly,
+            status=status,
+            auth_token=auth_token,
+            progress=progress
+        )
+
     else:
         df, records = search_experiments(assay_title=assay_title,
                                          target_labels=list(target_label) if target_label else None,
                                          organism=organism,
+                                         biosample=biosample,
                                          file_types=file_types,
                                          assembly=assembly,
                                          status=status,
@@ -168,6 +192,19 @@ def main(accessions,
     click.echo(f"Wrote manifest: {manifest_tsv}")
     click.echo(f"Wrote metadata: {meta_jsonl}")
 
+    # Write nf-core sample sheets
+    if nfcore:
+        samplesheet_name = f"nfcore_{assay_title.strip().lower().replace(' ', '_')}_samplesheet.csv"
+        write_nfcore_sheet(df, assay_title, f"{outdir}/{samplesheet_name}")
+        click.echo(f"nf-core sample sheet: {outdir}/{samplesheet_name}")
+    
+    #  Write Snakemake sheet
+    if snakemake:
+        samplesheet_name = f"snakemake_{assay_title.strip().lower().replace(' ','_')}_samplesheet.csv"
+        write_snakemake_sheet(df, assay_title, f"{outdir}/{samplesheet_name}")
+        click.echo(f"Snakemake sample sheet: {outdir}/{samplesheet_name}")
+
+    ## Download files
     if download and not dry_run:
         files_dir = outdir / "files"
         files_dir.mkdir(parents=True, exist_ok=True)
@@ -244,10 +281,3 @@ def main(accessions,
         df.to_csv(outdir / "manifest.tsv", sep="\t", index=False)
         click.echo(f"Updated manifest with local paths: {outdir / 'manifest.tsv'}")
 
-
-    if nfcore:
-        write_nfcore_sheet(df, outdir / "nfcore_chipseq_samplesheet.csv")
-        click.echo(f"NF-core sample sheet: {outdir / 'nfcore_chipseq_samplesheet.csv'}")
-    if snakemake:
-        write_snakemake_sheet(df, outdir / "snakemake_samples.tsv")
-        click.echo(f"Snakemake sample sheet: {outdir / 'snakemake_samples.tsv'}")

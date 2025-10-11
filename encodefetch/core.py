@@ -13,6 +13,8 @@ from rich.progress import (
     MofNCompleteColumn, TimeElapsedColumn, TimeRemainingColumn
 )
 
+from .exporters import *
+
 def _join_list(v):
     if isinstance(v, (list, tuple)):
         return ",".join(str(x) for x in v if x is not None and str(x) != "")
@@ -216,6 +218,7 @@ def experiments_to_df(experiments: Iterable[dict],
 def search_experiments(assay_title: Optional[str] = None,
                        target_labels: Optional[List[str]] = None,
                        organism: Optional[str] = None,
+                       biosample: Optional[str] = None,
                        file_types: Optional[Set[str]] = None,
                        assembly: Optional[str] = None,
                        status: str = "released",
@@ -228,6 +231,7 @@ def search_experiments(assay_title: Optional[str] = None,
         assay_title=assay_title,
         target_labels=target_labels,
         organism=organism,
+        biosample=biosample,
         status=status,
         perturbed=perturbed,
     )
@@ -255,8 +259,8 @@ def download_file(
     url: str,
     dest_path: Path,
     *,
-    progress,          # rich.progress.Progress instance
-    task_id: int,      # task created for this file
+    progress,
+    task_id: int,
     auth=None,
     chunk: int = 1024 * 1024,
     retries: int = 3,
@@ -294,11 +298,36 @@ def download_file(
             time.sleep(sleep)
     return False
 
+TF_BINDING_ASSAYS = ("tf chip-seq", "chipseq", "histone chip-seq")
+TRANSCRIPTOME_ASSAYS = ("rna-seq","total-rna-seq","long rna-seq","polya plus rna-seq", "polya minus rna-seq", "small rna-seq")
+DNA_ACCESSIBILITY_ASSAYS = ("atac-seq", "dnas-seq", "snatac-seq","faire-seq","mnase-seq")
 
-def write_nfcore_sheet(df: pd.DataFrame, outpath: Path):
-    from .exporters.nfcore_chipseq import NFCoreChipseq
-    NFCoreChipseq().write(df, outpath)
 
-def write_snakemake_sheet(df: pd.DataFrame, outpath: Path):
-    from .exporters.snakemake_chipseq import SnakemakeChipseq
-    SnakemakeChipseq().write(df, outpath)
+def write_nfcore_sheet(df: pd.DataFrame, assay_title, outpath: Path):
+    ''' NF-core sheets '''
+    # TF binding assays
+    if assay_title.lower() in TF_BINDING_ASSAYS:
+        NFCoreChipseq().write(df, outpath)
+
+    # Transcriptome assays
+    if assay_title.lower() in TRANSCRIPTOME_ASSAYS:
+        NFCoreRNAseq().write(df, outpath)
+    
+    #Chromatin accessibility assays
+    if assay_title.lower() in DNA_ACCESSIBILITY_ASSAYS:
+        NFCoreATACseq().write(df, outpath)
+
+def write_snakemake_sheet(df: pd.DataFrame, assay_title, outpath: Path):
+    ''' Snakemake sheets '''
+
+    # TF binding assays
+    if assay_title.lower() in TF_BINDING_ASSAYS:
+        SnakemakeChipseq().write(df, outpath)
+
+    # Transcriptome assays
+    if assay_title.lower() in TRANSCRIPTOME_ASSAYS:
+        SnakemakeRNAseq().write(df, outpath)
+    
+    #Chromatin accessibility assays
+    if assay_title.lower() in DNA_ACCESSIBILITY_ASSAYS:
+        SnakemakeATACseq().write(df, outpath)
