@@ -52,6 +52,7 @@ encodefetch --assay-title "TF ChIP-seq" \
 ### Key options
 
 - `--accessions ENCSR123ABC,ENCSR456DEF` — fetch experiments by accession directly.
+- `--accessions accessions.txt` — read one experiment accession per line; blank lines and `#` comments are ignored.
 - `--assay-title` — e.g. `TF ChIP-seq`, `Histone ChIP-seq`, `ATAC-seq`, `RNA-seq`.
 - `--target-label` — one or more targets (comma-separated).
 - `--organism` — e.g. `Homo sapiens`, `Mus musculus`.
@@ -59,8 +60,10 @@ encodefetch --assay-title "TF ChIP-seq" \
 - `--status` — default `released` (can also include `archived`).
 - `--perturbed true|false` — filter perturbed experiments.
 - `--download` — actually download matched files.
-- `--threads` — number of worker threads (applies to metadata fetching and downloads).
+- `--threads` — number of worker threads for metadata fetching, control fetching, and downloads.
+- `--max-retries` / `--chunk-size` — tune download retry count and streamed chunk size.
 - `--nfcore` / `--snakemake` — export pipeline-ready sample sheets.
+- `--control-strategy all|pool|best` — choose how samplesheets represent multiple controls.
 
 Run `encodefetch --help` to see all options.
 
@@ -73,6 +76,8 @@ After a run, `outdir/` contains:
 - **`files/`** — downloaded files, organized by experiment/control.
 - **`nfcore_*_samplesheet.csv`** — optional nf-core samplesheet.
 - **`snakemake_samples.tsv`** — optional Snakemake sample table.
+
+ENCODEfetch preserves all experiment-level controls in `matched_control_experiments`. File-level `controlled_by` links are normalized into `controlled_by_files` when ENCODE provides them. Samplesheets prefer file-level control mappings, then fall back to experiment-level controls; `--control-strategy all` duplicates case rows per control, `pool` joins controls with semicolons, and `best` currently chooses the first control deterministically.
 
 ## 🐍 Python API
 
@@ -105,8 +110,8 @@ ef.write_nfcore_sheet(metadata_collapse, "nfcore_chipseq.csv")
 ENCODEfetch currently provides assay-aware normalization and exporters to nf-core/snakemake samplesheets for:
 
 - **ChIP-seq** (production)
-- **ATAC-seq** (in development)
-- **RNA-seq** (in development)
+- **ATAC-seq** (in beta)
+- **RNA-seq** (in beta)
 - more to be added ..
 
 Each assay can plug in its own normalization (e.g., FASTQ collapsing, strandedness detection) and samplesheet exporters.

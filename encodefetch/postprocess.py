@@ -57,7 +57,7 @@ def collapse_fastq_pairs(df: pd.DataFrame) -> pd.DataFrame:
             rec["url_r2"] = r2.get("url","")
             rec["md5sum_r2"] = r2.get("md5sum","")
             rec["file_size_r2"] = r2.get("file_size","")
-            rec["file_accession_r2"] = r2.get("file_accession","")
+            rec["file_accession_r2"] = r2.get("file_accession","") or getattr(r2, "name", "")
             rec["single_end"] = "false"
         else:
             rec["fastq_2"] = ""

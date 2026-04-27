@@ -12,13 +12,41 @@ from rich.progress import (
     Progress, SpinnerColumn, TextColumn, BarColumn,
     MofNCompleteColumn, TimeElapsedColumn, TimeRemainingColumn
 )
+from rich.console import Console
 
 from .exporters import *
+
+console = Console()
 
 def _join_list(v):
     if isinstance(v, (list, tuple)):
         return ",".join(str(x) for x in v if x is not None and str(x) != "")
     return str(v) if v not in (None, "") else ""
+
+def extract_accessions_from_paths(values: list | None, prefix: str = "/files/") -> list[str]:
+    """Extract ENCODE accessions from strings or dicts while preserving order."""
+    if values is None:
+        return []
+    if isinstance(values, (str, dict)):
+        values = [values]
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in values:
+        acc = None
+        if isinstance(item, dict):
+            acc = item.get("accession")
+            if not acc:
+                item = item.get("@id", "")
+        if acc is None and isinstance(item, str):
+            value = item.strip()
+            if prefix and prefix in value:
+                value = value.split(prefix, 1)[1]
+            acc = value.strip("/").split("/")[0]
+        if acc and acc not in seen:
+            seen.add(acc)
+            out.append(acc)
+    return out
 
 def expand_possible_controls(exp_json):
     ctrls = []
@@ -73,6 +101,9 @@ def build_file_record(file_json, *, exp_json, is_control, matched_controls: str 
 
     paired_with = g(file_json, "paired_with","")
     paired_accession = paired_with.split("/")[-2] if paired_with else ""
+    controlled_by_files = ",".join(
+        extract_accessions_from_paths(g(file_json, "controlled_by", []), prefix="/files/")
+    )
 
     files_url = file_json.get("href") or ""
     absolute_url = ENCODE_BASE + files_url if files_url.startswith("/") else files_url
@@ -82,6 +113,7 @@ def build_file_record(file_json, *, exp_json, is_control, matched_controls: str 
         "experiment_accession": g(exp_json, "accession"),
         "is_control": is_control,
         "matched_control_experiments": matched_controls,
+        "controlled_by_files": controlled_by_files,
         "control_type": g(exp_json, "control_type", ""),
         "assay_title": g(exp_json, "assay_title"),
         "description": g(exp_json, "biosample_summary"),
@@ -164,7 +196,6 @@ def experiments_to_df(experiments: Iterable[dict],
     def process_experiment(exp) -> List[dict]:
         local_rows: List[dict] = []
         exp_acc = exp.get("accession")
-        print(f"📦 Fetching experiment: {exp_acc}")
         exp_full = fetch_experiment(exp_acc, auth=auth, embedded=True)
         ctrl_list = expand_possible_controls(exp_full)
         ctrls_csv = ",".join(ctrl_list)
@@ -173,14 +204,23 @@ def experiments_to_df(experiments: Iterable[dict],
         for f in collect_files_from_experiment(exp_full, file_types=file_types, assembly=assembly, status=status):
             local_rows.append(build_file_record(f, exp_json=exp_full, is_control=False, matched_controls=ctrls_csv))
 
-        # control files (fetched serially inside this worker)
-        for cacc in ctrl_list:
+        def fetch_control_rows(cacc: str) -> List[dict]:
+            control_rows: List[dict] = []
             try:
                 ctrl_exp = fetch_experiment(cacc, auth=auth, embedded=True)
                 for f in collect_files_from_experiment(ctrl_exp, file_types=file_types, assembly=assembly, status=status):
-                    local_rows.append(build_file_record(f, exp_json=ctrl_exp, is_control=True, matched_controls=""))
+                    control_rows.append(build_file_record(f, exp_json=ctrl_exp, is_control=True, matched_controls=""))
             except Exception as e:
-                print(f"  ⚠️  Failed to fetch control {cacc}: {e}")
+                console.log(f"Failed to fetch control {cacc}: {e}")
+            return control_rows
+
+        if len(ctrl_list) > 1:
+            with ThreadPoolExecutor(max_workers=min(threads, len(ctrl_list))) as ctrl_ex:
+                for control_rows in ctrl_ex.map(fetch_control_rows, ctrl_list):
+                    local_rows.extend(control_rows)
+        else:
+            for cacc in ctrl_list:
+                local_rows.extend(fetch_control_rows(cacc))
 
         return local_rows
 
@@ -237,7 +277,7 @@ def search_experiments(assay_title: Optional[str] = None,
     )
     res = encode_get("/search/", params=params_list, auth=auth, raw_query="control_type!=*")
     experiments = res.get("@graph", [])
-    print(f"🔢 Found {len(experiments)} experiment(s) to fetch.\n")
+    console.log(f"Found {len(experiments)} experiment(s) to fetch.")
     return experiments_to_df(experiments, file_types=file_types, assembly=assembly, status=status,
                              auth_token=auth_token, progress=progress, threads=threads)
 
@@ -249,7 +289,9 @@ def search_accessions(accessions: List[str],
                       progress: bool = False,
                       threads: int = 6,):
     auth = (auth_token, "") if auth_token else None
-    experiments = [fetch_experiment(acc.strip(), auth=auth) for acc in accessions if acc.strip()]
+    clean_accessions = [acc.strip() for acc in accessions if acc.strip()]
+    with ThreadPoolExecutor(max_workers=threads) as ex:
+        experiments = list(ex.map(lambda acc: fetch_experiment(acc, auth=auth), clean_accessions))
     return experiments_to_df(experiments, file_types=file_types, assembly=assembly, status=status,
                              auth_token=auth_token, progress=progress, threads=threads)
 
@@ -303,31 +345,31 @@ TRANSCRIPTOME_ASSAYS = ("rna-seq","total-rna-seq","long rna-seq","polya plus rna
 DNA_ACCESSIBILITY_ASSAYS = ("atac-seq", "dnas-seq", "snatac-seq","faire-seq","mnase-seq")
 
 
-def write_nfcore_sheet(df: pd.DataFrame, assay_title, outpath: Path):
+def write_nfcore_sheet(df: pd.DataFrame, assay_title, outpath: Path, control_strategy: str = "all"):
     ''' NF-core sheets '''
     # TF binding assays
     if assay_title.lower() in TF_BINDING_ASSAYS:
-        NFCoreChipseq().write(df, outpath)
+        NFCoreChipseq().write(df, outpath, control_strategy=control_strategy)
 
     # Transcriptome assays
     if assay_title.lower() in TRANSCRIPTOME_ASSAYS:
-        NFCoreRNAseq().write(df, outpath)
+        NFCoreRNAseq().write(df, outpath, control_strategy=control_strategy)
     
     #Chromatin accessibility assays
     if assay_title.lower() in DNA_ACCESSIBILITY_ASSAYS:
-        NFCoreATACseq().write(df, outpath)
+        NFCoreATACseq().write(df, outpath, control_strategy=control_strategy)
 
-def write_snakemake_sheet(df: pd.DataFrame, assay_title, outpath: Path):
+def write_snakemake_sheet(df: pd.DataFrame, assay_title, outpath: Path, control_strategy: str = "all"):
     ''' Snakemake sheets '''
 
     # TF binding assays
     if assay_title.lower() in TF_BINDING_ASSAYS:
-        SnakemakeChipseq().write(df, outpath)
+        SnakemakeChipseq().write(df, outpath, control_strategy=control_strategy)
 
     # Transcriptome assays
     if assay_title.lower() in TRANSCRIPTOME_ASSAYS:
-        SnakemakeRNAseq().write(df, outpath)
+        SnakemakeRNAseq().write(df, outpath, control_strategy=control_strategy)
     
     #Chromatin accessibility assays
     if assay_title.lower() in DNA_ACCESSIBILITY_ASSAYS:
-        SnakemakeATACseq().write(df, outpath)
+        SnakemakeATACseq().write(df, outpath, control_strategy=control_strategy)

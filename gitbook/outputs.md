@@ -9,7 +9,9 @@ A typical run generates:
 - **`snakemake_samples.tsv`** — Snakemake sample table.
 
 Key columns in `manifest.tsv` include:
-- `experiment_accession`, `is_control`, `matched_control_experiments`
+- `experiment_accession`, `is_control`, `matched_control_experiments`, `controlled_by_files`
+
+`matched_control_experiments` preserves all experiment-level controls as comma-separated experiment accessions. `controlled_by_files` stores normalized file accessions from ENCODE file-level `controlled_by` links when available.
 - `assay_title`, `target_label`, `organism`
 - `biosample_term_name`, `biosample_term_id`, `classification`
 - File fields: `file_accession`, `file_format`, `output_type`, `md5sum`, `file_size`

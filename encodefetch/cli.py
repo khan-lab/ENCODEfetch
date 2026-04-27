@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 import concurrent.futures as cf
 
-from os.path import isfile
 import rich_click as click
 from rich.progress import Progress
 
@@ -24,8 +23,8 @@ click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 click.rich_click.OPTION_GROUPS = {
     "encodefetch": [
         {
-            "name": "Direct selection",
-            "options": ["--accessions",],
+            "name": "Input selection",
+            "options": ["--accessions"],
         },
         {
             "name": "Search filters",
@@ -35,23 +34,42 @@ click.rich_click.OPTION_GROUPS = {
             ],
         },
         {
-            "name": "File selection and download",
-            "options": ["--file-type", "--assembly", "--download"],
+            "name": "File filters",
+            "options": ["--file-type", "--assembly"],
         },
         {
-            "name": "Output & reports",
-            "options": ["--outdir", "--nfcore", "--snakemake"],
+            "name": "Output options",
+            "options": ["--outdir", "--nfcore", "--snakemake", "--control-strategy"],
+        },
+        {
+            "name": "Download options",
+            "options": ["--download", "--max-retries", "--chunk-size"],
         },
         {
             "name": "Performance & UX",
-            "options": ["--threads", "--max-retries", "--chunk-size", "--progress"],
+            "options": ["--threads", "--progress"],
         },
         {
-            "name": "Execution",
+            "name": "Miscellaneous",
             "options": ["--dry-run", "--auth-token", "--version", "--help"],
         },
     ]
 }
+
+def parse_accessions_input(accessions: str) -> tuple[list[str], str]:
+    """Parse accession IDs from a comma-separated string or a text file path."""
+    path = Path(accessions)
+    if path.is_file():
+        parsed = []
+        with path.open() as fh:
+            for line in fh:
+                value = line.strip()
+                if not value or value.startswith("#"):
+                    continue
+                parsed.append(value)
+        return parsed, "file"
+    parsed = [a.strip() for a in accessions.split(",") if a.strip()]
+    return parsed, "string"
 
 
 @click.command(name="encodefetch", help="ENCODEfetch: a command-line tool for retrieving matched case-control data and standardized metadata from ENCODE.\n\n"
@@ -59,7 +77,7 @@ click.rich_click.OPTION_GROUPS = {
                     "https://github.com/khan-lab/ENCODEfetch")
 
 @click.option("--accessions", default=None, 
-              help="Comma-separated experiment accessions. Or path to text file with one accession per line.")
+              help="Comma-separated experiment accessions, or a text file with one accession per line.")
 
 @click.option("--assay-title", default="Histone ChIP-seq", 
               show_default=True, help="Assay title.")
@@ -94,7 +112,7 @@ click.rich_click.OPTION_GROUPS = {
               help="Download files.")
 
 @click.option("--threads", default=6, show_default=True, 
-              help="Workers for downloads (max 10). ENCODE has a rate limit of 10 requests per second.")
+              help="Workers for metadata fetching, control fetching, and downloads.")
 
 @click.option("--max-retries", default=3, show_default=True, type=int,
               help="Max HTTP retries per file during download.")
@@ -117,7 +135,14 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--snakemake", is_flag=True, default=False, 
               help="Write Snakemake samplesheet.")
 
-@click.version_option(version=__version__, prog_name="ENCODEfetch")
+@click.option("--control-strategy",
+              type=click.Choice(["all", "pool", "best"], case_sensitive=False),
+              default="all",
+              show_default=True,
+              help="Samplesheet strategy for multiple controls.")
+
+@click.version_option(version=__version__, prog_name="ENCODEfetch",
+                      message="%(prog)s, version %(version)s")
 
 # The main function
 def main(accessions, 
@@ -137,6 +162,7 @@ def main(accessions,
          progress, 
          nfcore, 
          snakemake, 
+         control_strategy,
          max_retries, 
          chunk_size
          ):
@@ -146,15 +172,9 @@ def main(accessions,
 
     
     if accessions:
-        # If accessions is a path to a text file, read from file
-        if isfile(accessions):
-            with open(accessions, "r") as fh:
-                acc_list = [line.strip() for line in fh if line.strip()]
-            click.echo(f"📂 Loaded {len(acc_list)} accessions from file: {accessions}")
-        else:
-            # Otherwise, treat as comma-separated list
-            acc_list = [a.strip() for a in accessions.split(",") if a.strip()]
-            click.echo(f"🧩 Parsed {len(acc_list)} accession(s) from input string.")
+        acc_list, accession_source = parse_accessions_input(accessions)
+        source_label = f"file: {accessions}" if accession_source == "file" else "string"
+        click.echo(f"Parsed {len(acc_list)} accession(s) from {source_label}.")
 
         df, records = search_accessions(
             acc_list,
@@ -162,7 +182,8 @@ def main(accessions,
             assembly=assembly,
             status=status,
             auth_token=auth_token,
-            progress=progress
+            progress=progress,
+            threads=threads,
         )
 
     else:
@@ -175,7 +196,8 @@ def main(accessions,
                                          status=status,
                                          auth_token=auth_token,
                                          progress=progress,
-                                         perturbed=perturbed)
+                                         perturbed=perturbed,
+                                         threads=threads)
 
     if df.empty:
         click.echo("No files matched your filters.", err=True); return
@@ -192,46 +214,87 @@ def main(accessions,
     click.echo(f"Wrote manifest: {manifest_tsv}")
     click.echo(f"Wrote metadata: {meta_jsonl}")
 
-    # Write nf-core sample sheets
-    if nfcore:
-        samplesheet_name = f"nfcore_{assay_title.strip().lower().replace(' ', '_')}_samplesheet.csv"
-        write_nfcore_sheet(df, assay_title, f"{outdir}/{samplesheet_name}")
-        click.echo(f"nf-core sample sheet: {outdir}/{samplesheet_name}")
-    
-    #  Write Snakemake sheet
-    if snakemake:
-        samplesheet_name = f"snakemake_{assay_title.strip().lower().replace(' ','_')}_samplesheet.csv"
-        write_snakemake_sheet(df, assay_title, f"{outdir}/{samplesheet_name}")
-        click.echo(f"Snakemake sample sheet: {outdir}/{samplesheet_name}")
+    def write_samplesheets():
+        if nfcore:
+            samplesheet_name = f"nfcore_{assay_title.strip().lower().replace(' ', '_')}_samplesheet.csv"
+            write_nfcore_sheet(df, assay_title, f"{outdir}/{samplesheet_name}", control_strategy=control_strategy)
+            click.echo(f"nf-core sample sheet: {outdir}/{samplesheet_name}")
+
+        if snakemake:
+            samplesheet_name = f"snakemake_{assay_title.strip().lower().replace(' ','_')}_samplesheet.csv"
+            write_snakemake_sheet(df, assay_title, f"{outdir}/{samplesheet_name}", control_strategy=control_strategy)
+            click.echo(f"Snakemake sample sheet: {outdir}/{samplesheet_name}")
 
     ## Download files
     if download and not dry_run:
         files_dir = outdir / "files"
         files_dir.mkdir(parents=True, exist_ok=True)
 
-        def make_dest(row):
-            typ = "control" if row.is_control else "case"
-            exp = row.experiment_accession
-            acc = row.file_accession
-            fmt = (row.file_format or "dat").lower()
+        def file_ext(file_format):
+            fmt = (file_format or "dat").lower()
             if fmt == "fastq":
                 fmt = "fastq.gz"
-            return files_dir / typ / exp / f"{acc}.{fmt}"
+            return fmt
+
+        def make_dest(is_control, experiment_accession, file_accession, file_format):
+            typ = "control" if is_control else "case"
+            return files_dir / typ / experiment_accession / f"{file_accession}.{file_ext(file_format)}"
+
+        def accession_from_download_url(url):
+            value = str(url or "").strip()
+            if "/files/" in value:
+                return value.split("/files/", 1)[1].strip("/").split("/")[0]
+            name = Path(value).name
+            return name.split(".", 1)[0] if name else ""
+
+        def parse_file_size(value):
+            if value in (None, ""):
+                return None
+            try:
+                size = int(float(value))
+            except (TypeError, ValueError):
+                return None
+            return size if size > 0 else None
+
+        def add_download_item(items, seen, *, url, dest, size, label):
+            if not url or not dest or dest in seen or dest.exists():
+                return
+            seen.add(dest)
+            items.append({
+                "url": url,
+                "dest": dest,
+                "size": size,
+                "label": label,
+            })
 
         # Build tasks from dataframe (skip if already present)
         items = []
-        for row in df.itertuples(index=False):
-            dest = make_dest(row)
-            if dest.exists():
-                continue
-            size = int(row.file_size) if str(row.file_size).isdigit() else None
-            label = f"{row.file_accession} ({row.experiment_accession})"
-            items.append({
-                "url": row.url,
-                "dest": dest,
-                "size": size,
-                "label": label
-            })
+        seen_dests = set()
+        for _, row in df.iterrows():
+            dest = make_dest(
+                row["is_control"],
+                row["experiment_accession"],
+                row["file_accession"],
+                row["file_format"],
+            )
+            size = parse_file_size(row.get("file_size", ""))
+            label = f"{row['file_accession']} ({row['experiment_accession']})"
+            add_download_item(items, seen_dests, url=row.get("url", ""), dest=dest, size=size, label=label)
+
+            r2_acc = str(row.get("file_accession_r2", "") or "").strip()
+            r2_url = str(row.get("url_r2", "") or "").strip()
+            if not r2_acc:
+                r2_acc = accession_from_download_url(r2_url)
+            if r2_acc and r2_url:
+                r2_dest = make_dest(
+                    row["is_control"],
+                    row["experiment_accession"],
+                    r2_acc,
+                    row["file_format"],
+                )
+                r2_size = parse_file_size(row.get("file_size_r2", ""))
+                r2_label = f"{r2_acc} ({row['experiment_accession']})"
+                add_download_item(items, seen_dests, url=r2_url, dest=r2_dest, size=r2_size, label=r2_label)
 
         if not items:
             click.echo("All files already present. Skipping downloads.")
@@ -259,6 +322,7 @@ def main(accessions,
                         download_file,
                         it["url"], it["dest"],
                         progress=prog, task_id=task_id,
+                        auth=(auth_token, "") if auth_token else None,
                         chunk=chunk_size, retries=max_retries
                     ))
 
@@ -266,18 +330,40 @@ def main(accessions,
                 for fut in futures:
                     fut.result()
 
-        # Update manifest with local_path
+        # Update manifest and FASTQ columns with local paths.
         local_paths = []
+        local_paths_r2 = []
         for _, row in df.iterrows():
-            typ = "control" if row["is_control"] else "case"
-            exp = row["experiment_accession"]
-            acc = row["file_accession"]
-            fmt = (row["file_format"] or "dat").lower()
-            if fmt == "fastq":
-                fmt = "fastq.gz"
-            path = files_dir / typ / exp / f"{acc}.{fmt}"
+            path = make_dest(
+                row["is_control"],
+                row["experiment_accession"],
+                row["file_accession"],
+                row["file_format"],
+            )
             local_paths.append(str(path) if path.exists() else "")
+
+            r2_acc = str(row.get("file_accession_r2", "") or "").strip()
+            if not r2_acc:
+                r2_acc = accession_from_download_url(row.get("url_r2", ""))
+            if r2_acc:
+                path_r2 = make_dest(
+                    row["is_control"],
+                    row["experiment_accession"],
+                    r2_acc,
+                    row["file_format"],
+                )
+                local_paths_r2.append(str(path_r2) if path_r2.exists() else "")
+            else:
+                local_paths_r2.append("")
+
         df["local_path"] = local_paths
+        if "file_accession_r2" in df.columns:
+            df["local_path_r2"] = local_paths_r2
+        if "fastq_1" in df.columns:
+            df["fastq_1"] = df.apply(lambda r: r["local_path"] or r.get("fastq_1", ""), axis=1)
+        if "fastq_2" in df.columns and "local_path_r2" in df.columns:
+            df["fastq_2"] = df.apply(lambda r: r["local_path_r2"] or r.get("fastq_2", ""), axis=1)
         df.to_csv(outdir / "manifest.tsv", sep="\t", index=False)
         click.echo(f"Updated manifest with local paths: {outdir / 'manifest.tsv'}")
 
+    write_samplesheets()
