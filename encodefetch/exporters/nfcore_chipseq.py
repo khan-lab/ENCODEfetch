@@ -18,9 +18,9 @@ class NFCoreChipseq(Exporter):
                     "sample": exp,
                     "fastq_1": r.get("fastq_1",""),
                     "fastq_2": r.get("fastq_2",""),
-                    "single_end": r.get("single_end",""),
-                    "antibody": r.get("target_label",""),
+                    #"single_end": r.get("single_end",""),
                     "replicate": rep,
+                    "antibody": r.get("target_label",""),
                     "control": control,
                     "control_replicate": rep if control else "",
                 })
