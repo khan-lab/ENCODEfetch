@@ -44,7 +44,6 @@ encodefetch --assay-title "TF ChIP-seq" \
              --file-type fastq \
              --status released \
              --progress \
-             --download \
              --threads 8 \
              --nfcore
 ```
@@ -59,7 +58,8 @@ encodefetch --assay-title "TF ChIP-seq" \
 - `--file-type` — restrict formats (`fastq`, `bam`, `bed`, `bigWig`…).
 - `--status` — default `released` (can also include `archived`).
 - `--perturbed true|false` — filter perturbed experiments.
-- `--download` — actually download matched files.
+- `--series OrganismDevelopmentSeries` — filter experiments by related ENCODE series `@type`.
+- `--metadata-only` — skip file downloads and write metadata/sample sheets only.
 - `--threads` — number of worker threads for metadata fetching, control fetching, and downloads.
 - `--max-retries` / `--chunk-size` — tune download retry count and streamed chunk size.
 - `--nfcore` / `--snakemake` — export pipeline-ready sample sheets.
@@ -89,6 +89,7 @@ metadata, recs = ef.search_experiments(
     assay_title="TF ChIP-seq",
     target_labels=["BRD4","SMAD3"],
     organism="Homo sapiens",
+    series="OrganismDevelopmentSeries",
     file_types={"fastq"},
     status="released",
     progress=False,

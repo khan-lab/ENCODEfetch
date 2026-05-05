@@ -30,7 +30,7 @@ click.rich_click.OPTION_GROUPS = {
             "name": "Search filters",
             "options": [
                 "--assay-title", "--target-label", "--organism", "--biosample",
-                "--perturbed", "--status"
+                "--perturbed", "--series", "--status"
             ],
         },
         {
@@ -43,7 +43,7 @@ click.rich_click.OPTION_GROUPS = {
         },
         {
             "name": "Download options",
-            "options": ["--download", "--max-retries", "--chunk-size"],
+            "options": ["--metadata-only", "--max-retries", "--chunk-size"],
         },
         {
             "name": "Performance & UX",
@@ -86,7 +86,7 @@ def parse_accessions_input(accessions: str) -> tuple[list[str], str]:
               help="Target label(s); repeat or comma-separate.")
 
 @click.option("--organism", default=None, 
-              help="Organism scientific name.")
+              help="Organism scientific name. (e.g. 'Homo sapiens', 'Mus musculus')")
 
 @click.option("--biosample", default=None, 
               help="Biosample ontology term name.")
@@ -105,11 +105,14 @@ def parse_accessions_input(accessions: str) -> tuple[list[str], str]:
 @click.option("--perturbed", type=click.Choice(["true","false"], case_sensitive=False),
               default=None, help="Filter experiments by 'perturbed'.")
 
+@click.option("--series", default=None,
+              help="Filter experiments by related series @type, e.g. OrganismDevelopmentSeries.")
+
 @click.option("--outdir", default="encode_results", show_default=True, 
               help="Output directory.")
 
-@click.option("--download", is_flag=True, default=False, 
-              help="Download files.")
+@click.option("--metadata-only", is_flag=True, default=False,
+              help="Write manifest/metadata and samplesheets only; skip file downloads.")
 
 @click.option("--threads", default=6, show_default=True, 
               help="Workers for metadata fetching, control fetching, and downloads.")
@@ -121,7 +124,7 @@ def parse_accessions_input(accessions: str) -> tuple[list[str], str]:
               help="Download chunk size in bytes (e.g., 1048576 for 1 MiB).")
 
 @click.option("--dry-run", is_flag=True, default=False, 
-              help="Only write manifest/metadata; skip downloads.")
+              help="Deprecated alias for --metadata-only.")
 
 @click.option("--auth-token", default=None, 
               help="ENCODE API token.")
@@ -154,8 +157,9 @@ def main(accessions,
          assembly, 
          status,
          perturbed, 
+         series,
          outdir, 
-         download, 
+         metadata_only,
          threads, 
          dry_run, 
          auth_token, 
@@ -197,6 +201,7 @@ def main(accessions,
                                          auth_token=auth_token,
                                          progress=progress,
                                          perturbed=perturbed,
+                                         series=series,
                                          threads=threads)
 
     if df.empty:
@@ -225,8 +230,10 @@ def main(accessions,
             write_snakemake_sheet(df, assay_title, f"{outdir}/{samplesheet_name}", control_strategy=control_strategy)
             click.echo(f"Snakemake sample sheet: {outdir}/{samplesheet_name}")
 
-    ## Download files
-    if download and not dry_run:
+    skip_downloads = metadata_only or dry_run
+
+    ## Download files by default unless metadata-only mode is requested.
+    if not skip_downloads:
         files_dir = outdir / "files"
         files_dir.mkdir(parents=True, exist_ok=True)
 

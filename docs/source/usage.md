@@ -11,6 +11,7 @@ df, recs = ef.search_experiments(
     file_types={"fastq"},
     status="released",
     perturbed="false",
+    series="OrganismDevelopmentSeries",
     progress=True,
     threads=8,
 )

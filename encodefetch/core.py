@@ -265,6 +265,7 @@ def search_experiments(assay_title: Optional[str] = None,
                        auth_token: Optional[str] = None,
                        progress: bool = False,
                        perturbed: Optional[str] = None,
+                       series: Optional[str] = None,
                        threads: int = 6,):
     auth = (auth_token, "") if auth_token else None
     params_list = build_params(
@@ -274,6 +275,7 @@ def search_experiments(assay_title: Optional[str] = None,
         biosample=biosample,
         status=status,
         perturbed=perturbed,
+        series=series,
     )
     res = encode_get("/search/", params=params_list, auth=auth, raw_query="control_type!=*")
     experiments = res.get("@graph", [])

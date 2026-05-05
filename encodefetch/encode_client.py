@@ -47,6 +47,7 @@ def build_params(
     limit: str = "all",
     extra_params: Optional[dict] = None,
     perturbed: Optional[str] = None,
+    series: Optional[str] = None,
 ) -> List[Tuple[str, str]]:
     """Build a list of (key, value) params (repeated keys preserved)."""
     p: List[Tuple[str, str]] = [("type","Experiment")]
@@ -60,6 +61,8 @@ def build_params(
         p.append(("biosample_ontology.term_name", biosample))
     if perturbed is not None:
         p.append(("perturbed", perturbed.lower()))
+    if series:
+        p.append(("related_series.@type", series))
     if target_labels:
         for lbl in target_labels:
             for v in str(lbl).split(","):

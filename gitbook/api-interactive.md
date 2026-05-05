@@ -11,6 +11,7 @@ df = fetch_dataframe(
   organism="Homo sapiens",
   file_types={"fastq"},
   status="released",
+  series="OrganismDevelopmentSeries",
   progress=True,
   threads=8,
   collapse_fastqs=True,
@@ -38,6 +39,7 @@ def fetch_dataframe(
     assembly: Optional[str] = None,
     status: str = "released",
     perturbed: Optional[str] = None,
+    series: Optional[str] = None,
     progress: bool = False,
     threads: int = 6,
     collapse_fastqs: bool = True,
@@ -65,6 +67,7 @@ def fetch_dataframe(
             auth_token=auth_token,
             progress=progress,
             perturbed=perturbed,
+            series=series,
             threads=threads,
         )
     if df.empty:

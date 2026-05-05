@@ -14,8 +14,9 @@ encodefetch --assay-title "Histone ChIP-seq"              --target-label H3K27ac
 - `--file-type` → fastq, bam, bed, bigWig, bedpe, tsv.
 - `--status` → released (default), archived.
 - `--perturbed true|false` → Filter perturbed experiments.
+- `--series OrganismDevelopmentSeries` → Filter experiments by related ENCODE series `@type`.
 - `--threads` → Worker threads for metadata fetching, control fetching, and downloads.
-- `--download` → Retrieve files to `outdir/files/`.
+- `--metadata-only` → Skip file downloads and write metadata/sample sheets only.
 - `--nfcore` / `--snakemake` → Export samplesheets.
 - `--control-strategy all|pool|best` → Choose how samplesheets represent multiple controls.
 - `--max-retries` / `--chunk-size` → Tune downloader reliability/throughput.

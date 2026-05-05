@@ -7,4 +7,4 @@ from .core import (
 )
 from .postprocess import collapse_fastq_pairs
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"

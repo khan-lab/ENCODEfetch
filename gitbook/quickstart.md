@@ -3,7 +3,7 @@
 Fetch BRD4 ChIP-seq data and matched controls:
 
 ```bash
-encodefetch --assay-title "TF ChIP-seq"              --target-label BRD4              --organism "Homo sapiens"              --file-type fastq              --status released              --progress              --download
+encodefetch --assay-title "TF ChIP-seq"              --target-label BRD4              --organism "Homo sapiens"              --file-type fastq              --status released              --progress
 ```
 
 This will:
