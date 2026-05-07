@@ -102,7 +102,7 @@ metadata.head()
 metadata_collapse = ef.collapse_fastq_pairs(metadata)
 
 # Write nf-core samplesheet
-ef.write_nfcore_sheet(metadata_collapse, "nfcore_chipseq.csv")
+ef.write_nfcore_sheet(metadata_collapse, "TF ChIP-seq", "nfcore_chipseq.csv")
 
 ```
 
@@ -126,3 +126,12 @@ Contributions are welcome!
 - Extend metadata fields in `build_file_record`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## Documentation
+
+The consolidated documentation lives in [`docs/`](docs/) and is built with MkDocs:
+
+```bash
+pip install -e ".[docs]"
+mkdocs build --strict
+```

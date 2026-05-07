@@ -73,12 +73,11 @@ Before submitting a PR, ensure:
 ## 📚 Documentation
 
 - Documentation lives in [`docs/`](docs/).
-- Built with **Sphinx + MyST Markdown** and hosted on GitHub Pages.
+- Built with **MkDocs** and hosted on GitHub Pages.
 - To build docs locally:
   ```bash
-  cd docs
-  make html
-  open _build/html/index.html
+  pip install -e ".[docs]"
+  mkdocs build --strict
   ```
 
 ## 🔀 Pull requests

@@ -30,13 +30,12 @@ jobs:
           pip install -r docs/requirements.txt
 
       - name: Build HTML
-        working-directory: docs
-        run: make html
+        run: mkdocs build --strict
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/html
+          publish_dir: site
           publish_branch: gh-pages
           force_orphan: true

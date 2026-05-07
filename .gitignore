@@ -139,4 +139,5 @@ cython_debug/
 .pypirc
 scripts/
 test_*
+!tests/test_docs_examples.py
 manuscript/

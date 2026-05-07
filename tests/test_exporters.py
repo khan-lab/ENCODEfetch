@@ -6,6 +6,7 @@ from encodefetch.exporters.nfcore_rnaseq import NFCoreRNAseq
 from encodefetch.exporters.snakemake_atacseq import SnakemakeATACseq
 from encodefetch.exporters.snakemake_chipseq import SnakemakeChipseq
 from encodefetch.exporters.snakemake_rnaseq import SnakemakeRNAseq
+from encodefetch.core import write_nfcore_sheet
 
 
 def _df():
@@ -187,3 +188,29 @@ def test_snakemake_rnaseq_preserves_paired_fastqs_and_strandedness(tmp_path):
     ]
     assert sheet[sheet["sample"].eq("ENCSRCASE")]["fastq_2"].tolist() == ["case_R2.fastq.gz"]
     assert sheet["strandedness"].tolist() == ["auto", "auto", "auto"]
+
+
+def test_nfcore_dispatch_accepts_common_chipseq_and_dnase_spellings(tmp_path):
+    chipseq_out = tmp_path / "chipseq.csv"
+    dnase_out = tmp_path / "dnase.csv"
+
+    write_nfcore_sheet(_df(), "ChIP-seq", chipseq_out)
+    write_nfcore_sheet(_df(), "DNase-seq", dnase_out)
+
+    assert pd.read_csv(chipseq_out).columns.tolist() == [
+        "sample",
+        "fastq_1",
+        "fastq_2",
+        "replicate",
+        "antibody",
+        "control",
+        "control_replicate",
+    ]
+    assert pd.read_csv(dnase_out).columns.tolist() == [
+        "sample",
+        "fastq_1",
+        "fastq_2",
+        "replicate",
+        "control",
+        "control_replicate",
+    ]

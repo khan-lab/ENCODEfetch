@@ -1,0 +1,32 @@
+site_name: ENCODEfetch
+site_description: Documentation for the ENCODEfetch command-line tool and Python API.
+site_url: https://khan-lab.github.io/ENCODEfetch/
+repo_url: https://github.com/khan-lab/ENCODEfetch
+repo_name: khan-lab/ENCODEfetch
+
+theme:
+  name: readthedocs
+  highlightjs: true
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quickstart: quickstart.md
+  - Command Line: cli.md
+  - Python API: api.md
+  - Exporters: exporters.md
+  - Assays: assays.md
+  - Outputs: outputs.md
+  - Examples: examples.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - fenced_code
+  - tables
+  - toc:
+      permalink: true
+
+exclude_docs: |
+  source/

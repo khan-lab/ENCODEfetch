@@ -342,9 +342,9 @@ def download_file(
             time.sleep(sleep)
     return False
 
-TF_BINDING_ASSAYS = ("tf chip-seq", "chipseq", "histone chip-seq")
+TF_BINDING_ASSAYS = ("tf chip-seq", "chipseq", "chip-seq", "histone chip-seq")
 TRANSCRIPTOME_ASSAYS = ("rna-seq","total-rna-seq","long rna-seq","polya plus rna-seq", "polya minus rna-seq", "small rna-seq")
-DNA_ACCESSIBILITY_ASSAYS = ("atac-seq", "dnas-seq", "snatac-seq","faire-seq","mnase-seq")
+DNA_ACCESSIBILITY_ASSAYS = ("atac-seq", "dnase-seq", "dnas-seq", "snatac-seq","faire-seq","mnase-seq")
 
 
 def write_nfcore_sheet(df: pd.DataFrame, assay_title, outpath: Path, control_strategy: str = "all"):
