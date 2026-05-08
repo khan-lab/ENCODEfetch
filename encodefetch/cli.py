@@ -139,7 +139,7 @@ def parse_accessions_input(accessions: str) -> tuple[list[str], str]:
               help="Write Snakemake samplesheet.")
 
 @click.option("--control-strategy",
-              type=click.Choice(["all", "pool", "best"], case_sensitive=False),
+              type=click.Choice(["all", "pool", "best", "first"], case_sensitive=False),
               default="all",
               show_default=True,
               help="Samplesheet strategy for multiple controls.")

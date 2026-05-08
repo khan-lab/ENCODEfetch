@@ -63,7 +63,7 @@ encodefetch --assay-title "TF ChIP-seq" \
 - `--threads` — number of worker threads for metadata fetching, control fetching, and downloads.
 - `--max-retries` / `--chunk-size` — tune download retry count and streamed chunk size.
 - `--nfcore` / `--snakemake` — export pipeline-ready sample sheets.
-- `--control-strategy all|pool|best` — choose how samplesheets represent multiple controls.
+- `--control-strategy all|pool|best|first` — choose how samplesheets represent multiple controls.
 
 Run `encodefetch --help` to see all options.
 
@@ -77,7 +77,7 @@ After a run, `outdir/` contains:
 - **`nfcore_*_samplesheet.csv`** — optional nf-core samplesheet.
 - **`snakemake_samples.tsv`** — optional Snakemake sample table.
 
-ENCODEfetch preserves all experiment-level controls in `matched_control_experiments`. File-level `controlled_by` links are normalized into `controlled_by_files` when ENCODE provides them. Samplesheets prefer file-level control mappings, then fall back to experiment-level controls; `--control-strategy all` duplicates case rows per control, `pool` joins controls with semicolons, and `best` currently chooses the first control deterministically.
+ENCODEfetch preserves all experiment-level controls in `matched_control_experiments`. File-level `controlled_by` links are normalized into `controlled_by_files` when ENCODE provides them. Samplesheets prefer file-level control mappings, then fall back to experiment-level controls; `--control-strategy all` duplicates case rows per control, `pool` joins controls with semicolons, `first` chooses the first resolved control, and `best` ranks controls by metadata similarity.
 
 ## 🐍 Python API
 

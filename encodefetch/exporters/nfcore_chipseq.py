@@ -13,7 +13,7 @@ class NFCoreChipseq(Exporter):
             exp = r["experiment_accession"]
             rep = (r.get("biological_replicates") or "1").split(",")[0].strip()
             controls = [] if r.get("is_control") else resolve_controls_for_row(r, file_to_sample)
-            for control in controls_for_strategy(controls, control_strategy):
+            for control in controls_for_strategy(controls, control_strategy, case_row=r, df=df):
                 rows.append({
                     "sample": exp,
                     "fastq_1": r.get("fastq_1",""),

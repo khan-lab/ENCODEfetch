@@ -55,6 +55,16 @@ def _df():
     )
 
 
+def _df_with_ranked_controls():
+    df = _df()
+    df["biosample_term_id"] = ["EFO:0002067", "EFO:0002784", "EFO:0002067"]
+    df["biosample_term_name"] = ["K562", "GM12878", "K562"]
+    df["organism"] = ["Homo sapiens", "Homo sapiens", "Homo sapiens"]
+    df["lab"] = ["ENCODE Lab A", "ENCODE Lab B", "ENCODE Lab A"]
+    df["award"] = ["ENCODE4", "ENCODE4", "ENCODE4"]
+    return df
+
+
 def _write_and_read(tmp_path, strategy):
     out = tmp_path / f"{strategy}.csv"
     NFCoreChipseq().write(_df(), out, control_strategy=strategy)
@@ -75,7 +85,23 @@ def test_nfcore_control_strategy_pool_joins_controls(tmp_path):
     assert case_rows["control"].tolist() == ["ENCSRCTRL1;ENCSRCTRL2"]
 
 
-def test_nfcore_control_strategy_best_uses_first_control(tmp_path):
+def test_nfcore_control_strategy_first_uses_first_control(tmp_path):
+    sheet = _write_and_read(tmp_path, "first")
+    case_rows = sheet[sheet["sample"].eq("ENCSRCASE")]
+
+    assert case_rows["control"].tolist() == ["ENCSRCTRL1"]
+
+
+def test_nfcore_control_strategy_best_uses_highest_scoring_control(tmp_path):
+    out = tmp_path / "best.csv"
+    NFCoreChipseq().write(_df_with_ranked_controls(), out, control_strategy="best")
+    sheet = pd.read_csv(out).fillna("")
+    case_rows = sheet[sheet["sample"].eq("ENCSRCASE")]
+
+    assert case_rows["control"].tolist() == ["ENCSRCTRL2"]
+
+
+def test_nfcore_control_strategy_best_falls_back_to_first_on_tie(tmp_path):
     sheet = _write_and_read(tmp_path, "best")
     case_rows = sheet[sheet["sample"].eq("ENCSRCASE")]
 

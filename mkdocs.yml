@@ -5,8 +5,31 @@ repo_url: https://github.com/khan-lab/ENCODEfetch
 repo_name: khan-lab/ENCODEfetch
 
 theme:
-  name: readthedocs
-  highlightjs: true
+  name: material
+  logo: img/logo.png
+  favicon: img/logo.png
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
 
 nav:
   - Home: index.md
@@ -24,6 +47,8 @@ nav:
 markdown_extensions:
   - admonition
   - fenced_code
+  - pymdownx.details
+  - pymdownx.superfences
   - tables
   - toc:
       permalink: true

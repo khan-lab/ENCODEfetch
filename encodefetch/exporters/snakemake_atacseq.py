@@ -23,7 +23,7 @@ class SnakemakeATACseq(Exporter):
             fastq_1 = first_present(r.get("fastq_1"), r.get("local_path"), r.get("url"))
             fastq_2 = first_present(r.get("fastq_2"), r.get("local_path_r2"), r.get("url_r2"))
             controls = [] if r.get("is_control") else resolve_controls_for_row(r, file_to_sample)
-            for control in controls_for_strategy(controls, control_strategy):
+            for control in controls_for_strategy(controls, control_strategy, case_row=r, df=df):
                 rows.append({
                     "sample": exp,
                     "group": group,
