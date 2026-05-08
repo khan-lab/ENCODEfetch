@@ -52,7 +52,7 @@ encodefetch \
 | `--progress` / `--no-progress` | Enable or disable progress bars. |
 | `--nfcore` | Write an nf-core samplesheet for the selected assay. |
 | `--snakemake` | Write a Snakemake samplesheet for the selected assay. |
-| `--control-strategy` | Choose `all`, `pool`, or `best` for multiple controls in samplesheets. |
+| `--control-strategy` | Choose `all`, `pool`, `best`, or `first` for multiple controls in samplesheets. |
 | `--dry-run` | Deprecated alias for `--metadata-only`. |
 | `--version` | Show the installed version. |
 
@@ -62,6 +62,9 @@ The manifest always preserves all matched controls in `matched_control_experimen
 
 `--control-strategy` changes only samplesheet output:
 
-- `all`: duplicate each case row once per control.
-- `pool`: write all controls in one semicolon-separated field.
-- `best`: choose the first control deterministically.
+- `all`: write one case row per resolved control.
+- `pool`: write one case row with controls joined by semicolons.
+- `first`: write one case row with the first resolved control.
+- `best`: write one case row with the highest-scoring control based on biosample, organism, lab, replicate, file, and release metadata.
+
+See [Exporters](exporters.md#control-strategies) for the full ranking details.

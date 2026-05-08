@@ -41,6 +41,8 @@ encodefetch \
   --control-strategy best
 ```
 
+Use `--control-strategy first` for deterministic first-control selection, `all` to duplicate case rows once per control, or `pool` to keep one case row with semicolon-separated controls.
+
 ## Accessions mode
 
 ```bash

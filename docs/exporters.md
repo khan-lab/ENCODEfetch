@@ -79,15 +79,62 @@ snakemake \
 
 ## Control strategies
 
-ENCODE can provide more than one control. ENCODEfetch preserves all controls in `manifest.tsv`, then lets you choose how samplesheets represent them:
+ENCODE can provide more than one control for a case experiment. ENCODEfetch always preserves the full control set in `manifest.tsv`, then uses `--control-strategy` only to decide how exporter samplesheets represent those controls.
+
+Control resolution happens before the strategy is applied:
+
+1. If a case row has file-level `controlled_by_files`, ENCODEfetch maps those control file accessions back to control experiment accessions when possible.
+2. If file-level links are not available, ENCODEfetch falls back to `matched_control_experiments`.
+3. Duplicate controls are removed while preserving the original ENCODE order.
 
 | Strategy | Behavior |
 | --- | --- |
-| `all` | Duplicates the case row once per control. |
-| `pool` | Writes all controls in a single semicolon-separated value. |
-| `best` | Uses the first control deterministically. |
+| `all` | Writes one case row per resolved control. A case with two controls appears twice, once for each control. |
+| `pool` | Writes one case row and joins all resolved controls in a semicolon-separated value, such as `ENCSRCTRL1;ENCSRCTRL2`. |
+| `first` | Writes one case row with the first resolved control. This is deterministic and preserves the original ENCODE/control resolution order. |
+| `best` | Writes one case row with the highest-scoring control after metadata ranking. Ties fall back to the original resolved order. |
 
-File-level `controlled_by` links are preferred when present. If they are absent, exporter control columns fall back to experiment-level `matched_control_experiments`.
+### Choosing a strategy
+
+Use `all` when the downstream workflow can model multiple controls as separate rows. Use `pool` when the workflow expects one row per case but can receive a pooled control field. Use `first` when you need the previous simple behavior or want exact order-based selection. Use `best` when you want ENCODEfetch to pick the most similar available control.
+
+### Best-control ranking
+
+The `best` strategy scores each candidate control against the case row. Higher scores win. The current ranking rewards:
+
+| Signal | Why it matters |
+| --- | --- |
+| `biosample_term_id` and `biosample_term_name` | Strongest biological match. |
+| `organism` | Prevents cross-organism control selection. |
+| `lab` and `award` | Favors controls generated in a similar production context. |
+| `classification` | Helps keep cell line, tissue, primary cell, and similar classes aligned. |
+| `biological_replicates` and `technical_replicates` | Favors replicate-compatible controls. |
+| `run_type`, `paired_end`, and `file_format` | Favors compatible sequencing/file structure. |
+| `donor_sex` and `donor_life_stage` | Adds donor-level compatibility when available. |
+| released file status and usable file path/URL | Favors controls that are usable by downstream workflows. |
+
+If metadata are missing or all candidates receive the same score, `best` is still deterministic: it returns the first resolved control.
+
+### Examples
+
+```bash
+encodefetch \
+  --assay-title "TF ChIP-seq" \
+  --target-label BRD4 \
+  --file-type fastq \
+  --metadata-only \
+  --nfcore \
+  --control-strategy best
+```
+
+```python
+ef.write_nfcore_sheet(
+    df,
+    "TF ChIP-seq",
+    "nfcore_chipseq.csv",
+    control_strategy="first",
+)
+```
 
 ## Python usage
 

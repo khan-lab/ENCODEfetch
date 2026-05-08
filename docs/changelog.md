@@ -4,7 +4,7 @@
 
 - Added accession-file parsing for `--accessions`.
 - Added metadata-only mode as the preferred way to skip downloads.
-- Added exporter control strategies: `all`, `pool`, and `best`.
+- Added exporter control strategies: `all`, `pool`, deterministic `first`, and metadata-ranked `best`.
 - Improved file-level control mapping through `controlled_by_files`.
 - Added nf-core and Snakemake exporters for ChIP-seq, ATAC-seq, and RNA-seq assay families.
 

@@ -69,6 +69,8 @@ ef.write_snakemake_sheet(
 
 The assay title determines which exporter is used.
 
+`control_strategy` accepts `all`, `pool`, `first`, or `best`. The first two preserve multiple controls in the samplesheet, while `first` and `best` reduce each case to one selected control. See [Exporters](exporters.md#control-strategies) for details.
+
 ## Public functions
 
 | Function | Purpose |

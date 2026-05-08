@@ -1,4 +1,4 @@
-# ENCODEfetch
+# Welcome to **ENCODE**fetch
 
 ![ENCODEfetch CLI](img/ENCODEfetch-cli.png)
 
